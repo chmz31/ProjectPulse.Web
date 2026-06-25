@@ -82,7 +82,8 @@
 }
 
 .auth-card label,
-.project-form label {
+.project-form label,
+.edit-project-form label {
   display: grid;
   gap: 8px;
   color: var(--text-strong);
@@ -91,7 +92,9 @@
 
 .auth-card input,
 .project-form input,
-.project-form textarea {
+.project-form textarea,
+.edit-project-form input,
+.edit-project-form textarea {
   width: 100%;
   min-height: 44px;
   padding: 0 14px;
@@ -102,7 +105,8 @@
   font: inherit;
 }
 
-.project-form textarea {
+.project-form textarea,
+.edit-project-form textarea {
   min-height: 120px;
   padding-block: 12px;
   resize: vertical;
@@ -110,7 +114,9 @@
 
 .auth-card input:focus,
 .project-form input:focus,
-.project-form textarea:focus {
+.project-form textarea:focus,
+.edit-project-form input:focus,
+.edit-project-form textarea:focus {
   border-color: var(--accent);
   outline: 3px solid rgba(56, 189, 248, 0.22);
 }
@@ -118,6 +124,8 @@
 .auth-card input:disabled,
 .project-form input:disabled,
 .project-form textarea:disabled,
+.edit-project-form input:disabled,
+.edit-project-form textarea:disabled,
 button:disabled {
   cursor: not-allowed;
   opacity: 0.68;
@@ -164,6 +172,27 @@ button:disabled {
   border: 1px solid var(--border);
   border-radius: 8px;
   background: #0f172a;
+}
+
+.edit-project-form {
+  display: grid;
+  gap: 16px;
+}
+
+.project-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 6px;
+}
+
+.danger-button {
+  border-color: rgba(248, 113, 113, 0.7);
+  background: rgba(127, 29, 29, 0.42);
+}
+
+.danger-button:hover {
+  background: rgba(153, 27, 27, 0.72);
 }
 
 .project-card time {

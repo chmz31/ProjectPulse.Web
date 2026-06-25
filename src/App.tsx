@@ -2,7 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { login, logout, register } from './api/authApi'
 import { ApiError } from './api/httpClient'
-import { createProject, getProjects } from './api/projectsApi'
+import {
+  createProject,
+  deleteProject,
+  getProjects,
+  updateProject,
+} from './api/projectsApi'
 import {
   clearSession,
   getStoredSession,
@@ -46,6 +51,17 @@ function App() {
   const [projectDescription, setProjectDescription] = useState('')
   const [createProjectError, setCreateProjectError] = useState('')
   const [isCreatingProject, setIsCreatingProject] = useState(false)
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null)
+  const [editProjectName, setEditProjectName] = useState('')
+  const [editProjectDescription, setEditProjectDescription] = useState('')
+  const [editingProjectError, setEditingProjectError] = useState('')
+  const [updatingProjectId, setUpdatingProjectId] = useState<string | null>(
+    null,
+  )
+  const [deletingProjectId, setDeletingProjectId] = useState<string | null>(
+    null,
+  )
+  const [deleteProjectError, setDeleteProjectError] = useState('')
 
   const isRegisterMode = mode === 'register'
   const submitLabel = useMemo(() => {
@@ -127,6 +143,9 @@ function App() {
     setProjectName('')
     setProjectDescription('')
     setCreateProjectError('')
+    resetEditingProject()
+    setDeletingProjectId(null)
+    setDeleteProjectError('')
 
     if (refreshToken) {
       try {
@@ -158,7 +177,7 @@ function App() {
 
       setProjectName('')
       setProjectDescription('')
-      setProjects(await getProjects(session.accessToken))
+      await refreshProjects(session.accessToken)
     } catch (error) {
       setCreateProjectError(
         getReadableError(error, 'Your session could not create projects.'),
@@ -166,6 +185,87 @@ function App() {
     } finally {
       setIsCreatingProject(false)
     }
+  }
+
+  function startEditingProject(project: ProjectDto) {
+    setEditingProjectId(project.id)
+    setEditProjectName(project.name)
+    setEditProjectDescription(project.description ?? '')
+    setEditingProjectError('')
+    setDeleteProjectError('')
+  }
+
+  function resetEditingProject() {
+    setEditingProjectId(null)
+    setEditProjectName('')
+    setEditProjectDescription('')
+    setEditingProjectError('')
+    setUpdatingProjectId(null)
+  }
+
+  async function handleUpdateProject(
+    event: FormEvent<HTMLFormElement>,
+    projectId: string,
+  ) {
+    event.preventDefault()
+
+    if (!session) {
+      return
+    }
+
+    const trimmedName = editProjectName.trim()
+    const trimmedDescription = editProjectDescription.trim()
+
+    setEditingProjectError('')
+    setUpdatingProjectId(projectId)
+
+    try {
+      await updateProject(session.accessToken, projectId, {
+        name: trimmedName,
+        description: trimmedDescription.length > 0 ? trimmedDescription : null,
+      })
+      resetEditingProject()
+      await refreshProjects(session.accessToken)
+    } catch (error) {
+      setEditingProjectError(
+        getReadableError(error, 'Your session could not update projects.'),
+      )
+    } finally {
+      setUpdatingProjectId(null)
+    }
+  }
+
+  async function handleDeleteProject(project: ProjectDto) {
+    if (!session) {
+      return
+    }
+
+    const confirmed = window.confirm(`Delete "${project.name}"?`)
+
+    if (!confirmed) {
+      return
+    }
+
+    setDeleteProjectError('')
+    setDeletingProjectId(project.id)
+
+    try {
+      await deleteProject(session.accessToken, project.id)
+      if (editingProjectId === project.id) {
+        resetEditingProject()
+      }
+      await refreshProjects(session.accessToken)
+    } catch (error) {
+      setDeleteProjectError(
+        getReadableError(error, 'Your session could not delete projects.'),
+      )
+    } finally {
+      setDeletingProjectId(null)
+    }
+  }
+
+  async function refreshProjects(accessToken: string) {
+    setProjects(await getProjects(accessToken))
   }
 
   if (session) {
@@ -232,6 +332,9 @@ function App() {
             )}
 
             {projectsError && <p className="error-message">{projectsError}</p>}
+            {deleteProjectError && (
+              <p className="error-message">{deleteProjectError}</p>
+            )}
 
             {!isLoadingProjects && !projectsError && projects.length === 0 && (
               <div className="empty-state">
@@ -244,11 +347,92 @@ function App() {
               <div className="projects-list">
                 {projects.map((project) => (
                   <article className="project-card" key={project.id}>
-                    <h3>{project.name}</h3>
-                    <p>{project.description || 'No description provided.'}</p>
-                    <time dateTime={project.createdAt}>
-                      Created {formatProjectDate(project.createdAt)}
-                    </time>
+                    {editingProjectId === project.id ? (
+                      <form
+                        className="edit-project-form"
+                        onSubmit={(event) =>
+                          handleUpdateProject(event, project.id)
+                        }
+                      >
+                        <label>
+                          Name
+                          <input
+                            disabled={updatingProjectId === project.id}
+                            onChange={(event) =>
+                              setEditProjectName(event.target.value)
+                            }
+                            required
+                            type="text"
+                            value={editProjectName}
+                          />
+                        </label>
+
+                        <label>
+                          Description
+                          <textarea
+                            disabled={updatingProjectId === project.id}
+                            onChange={(event) =>
+                              setEditProjectDescription(event.target.value)
+                            }
+                            rows={3}
+                            value={editProjectDescription}
+                          />
+                        </label>
+
+                        {editingProjectError && (
+                          <p className="error-message">{editingProjectError}</p>
+                        )}
+
+                        <div className="project-actions">
+                          <button
+                            type="submit"
+                            disabled={updatingProjectId === project.id}
+                          >
+                            {updatingProjectId === project.id
+                              ? 'Saving...'
+                              : 'Save'}
+                          </button>
+                          <button
+                            type="button"
+                            className="secondary-button"
+                            disabled={updatingProjectId === project.id}
+                            onClick={resetEditingProject}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <>
+                        <h3>{project.name}</h3>
+                        <p>
+                          {project.description || 'No description provided.'}
+                        </p>
+                        <time dateTime={project.createdAt}>
+                          Created {formatProjectDate(project.createdAt)}
+                        </time>
+                        <div className="project-actions">
+                          <button
+                            type="button"
+                            className="secondary-button"
+                            disabled={deletingProjectId === project.id}
+                            onClick={() => startEditingProject(project)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            className="danger-button"
+                            disabled={deletingProjectId === project.id}
+                            onClick={() => handleDeleteProject(project)}
+                          >
+                            {deletingProjectId === project.id
+                              ? 'Deleting...'
+                              : 'Delete'}
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </article>
                 ))}
               </div>
