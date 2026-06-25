@@ -10,6 +10,13 @@
   max-width: 760px;
 }
 
+.landing-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+  gap: 48px;
+  align-items: start;
+}
+
 .eyebrow {
   color: var(--accent);
   font-size: 0.85rem;
@@ -35,6 +42,63 @@
   flex-wrap: wrap;
   gap: 12px;
   padding-top: 10px;
+}
+
+.auth-card,
+.dashboard-panel {
+  display: grid;
+  gap: 20px;
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(23, 32, 51, 0.88);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.2);
+}
+
+.dashboard-panel {
+  max-width: 760px;
+}
+
+.auth-card h2 {
+  margin-top: 6px;
+  font-size: 1.55rem;
+}
+
+.auth-card label {
+  display: grid;
+  gap: 8px;
+  color: var(--text-strong);
+  font-weight: 700;
+}
+
+.auth-card input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #0f172a;
+  color: var(--text);
+  font: inherit;
+}
+
+.auth-card input:focus {
+  border-color: var(--accent);
+  outline: 3px solid rgba(56, 189, 248, 0.22);
+}
+
+.auth-card input:disabled,
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
+.error-message {
+  padding: 12px 14px;
+  border: 1px solid rgba(248, 113, 113, 0.5);
+  border-radius: 8px;
+  background: rgba(127, 29, 29, 0.26);
+  color: #fecaca;
 }
 
 .feature-grid {
@@ -69,6 +133,11 @@
 @media (max-width: 720px) {
   .app-shell {
     padding: 48px 18px;
+  }
+
+  .landing-layout {
+    grid-template-columns: 1fr;
+    gap: 36px;
   }
 
   .feature-grid {
