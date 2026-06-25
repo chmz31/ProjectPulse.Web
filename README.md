@@ -88,6 +88,10 @@ npm run build
 npm run preview
 ```
 
+## CI
+
+GitHub Actions runs linting and a production build on pushes to `main` and pull requests targeting `main`.
+
 ## Current Scope And Limitations
 
 - Session tokens are stored in `localStorage` for portfolio/demo use.
